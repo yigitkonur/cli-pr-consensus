@@ -1,9 +1,9 @@
-# pr-consensus
+# cli-prconsensus
 
 > get consensus from all your AI code reviewers in one place
 
 ```bash
-npx pr-consensus https://github.com/owner/repo/pull/123
+npx cli-prconsensus https://github.com/owner/repo/pull/123
 ```
 
 ---
@@ -39,10 +39,10 @@ people think AI code review is just for catching obvious bugs. it's not. it's ab
 
 ```bash
 # just run it (no install needed)
-npx pr-consensus <github-pr-url>
+npx cli-prconsensus <github-pr-url>
 
 # or install globally
-npm install -g pr-consensus
+npm install -g cli-prconsensus
 
 # then use either command
 pr-consensus <url>
@@ -82,13 +82,13 @@ prc <url> --format consensus | pbcopy
 
 ```bash
 # get consensus view, copy to clipboard, paste into Claude
-npx pr-consensus https://github.com/owner/repo/pull/123 --format consensus | pbcopy
+npx cli-prconsensus https://github.com/owner/repo/pull/123 --format consensus | pbcopy
 
 # save full review with diffs for later
-npx pr-consensus https://github.com/owner/repo/pull/123 --full -o pr-review.json
+npx cli-prconsensus https://github.com/owner/repo/pull/123 --full -o pr-review.json
 
 # quiet mode for scripting
-npx pr-consensus <url> -q --format json > data.json
+npx cli-prconsensus <url> -q --format json > data.json
 ```
 
 ---
