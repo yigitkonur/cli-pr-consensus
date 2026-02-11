@@ -1,0 +1,970 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "generatedAt": "2026-02-03T10:19:08.755Z",
+    "prUrl": "https://github.com/yigitkonur/design-system-retro-ui/pull/1",
+    "mode": "normal",
+    "format": "json"
+  },
+  "pr": {
+    "number": 1,
+    "title": "feat(storybook): Add argTypes controls and play test functions to 249 story files (Vibe Kanban)",
+    "body": "## Summary\n\nThis PR adds comprehensive **argTypes controls** and **play test functions** to 249 Storybook story files across the RetroUI design system. This enables:\n\n- **Interactive Controls**: All component props are now configurable via Storybook controls panel\n- **Automated Testing**: Play functions provide automated interaction testing for each story\n- **Documentation**: argTypes include descriptions that enhance auto-generated documentation\n\n## Changes Made\n\n### Foundation Domains (203 files)\n- `account-settings/` - 14 files: Profile, security, billing, preferences components\n- `admin/` - 15 files: User management, audit logs, system settings\n- `authentication/` - 5 files: Sign-in, sign-up, password reset, 2FA\n- `communication/` - 8 files: Chat, inbox, notifications, presence\n- `dashboard/` - 9 files: Analytics, KPIs, charts, data tables\n- `ecommerce/` - 6 files: Product cards, cart, checkout, order tracking\n- `feedback/` - 12 files: Ratings, reviews, surveys, testimonials\n- `files/` - 12 files: Upload, browser, preview, lightbox\n- `forms/` - 6 files: Contact, validation, multi-step, search\n- `navigation/` - 6 files: Header, sidebar, breadcrumb, tabs\n- `notifications/` - 8 files: Alerts, toasts, banners, dropdowns\n- `onboarding/` - 14 files: Welcome, setup wizard, empty states\n- `payments/` - 12 files: Payment methods, receipts, transactions\n- `scheduling/` - 16 files: Calendar, booking, availability\n- `search/` - 16 files: Search bar, filters, pagination, results\n- `social/` - 9 files: Feeds, profiles, followers, messaging\n- `status/` - 8 files: Progress bars, health indicators, timelines\n- `wizards/` - 7 files: Steppers, branching flows, completion\n\n### Cross-Cutting Stories (20 files)\n- `accessibility/` - 6 files: ARIA patterns, focus management, WCAG compliance\n- `hooks/` - 8 files: useLocalStorage, useCountdown, useDeviceDetection, etc.\n- `performance/` - 6 files: Lazy loading, memoization, virtualization\n\n## Why These Changes\n\n1. **Storybook Best Practices**: Every story should have argTypes for props documentation and controls\n2. **Testing Coverage**: Play functions enable automated interaction testing via `vitest` + Playwright\n3. **Developer Experience**: Interactive controls let developers experiment with component variations\n4. **Documentation Quality**: argTypes descriptions auto-populate the Docs addon\n\n## Implementation Details\n\n### Import Standards\nAll files now use the correct Storybook 10.x imports:\n```tsx\nimport type { Meta, StoryObj } from '@storybook/react-vite';\nimport { expect, within, waitFor } from 'storybook/test';\n```\n\n### argTypes Pattern\n```tsx\nargTypes: {\n  variant: {\n    control: { type: 'select' },\n    options: ['default', 'compact', 'detailed'],\n    description: 'Display variant of the component',\n  },\n  disabled: {\n    control: 'boolean',\n    description: 'Disable user interaction',\n  },\n}\n```\n\n### Play Function Pattern\n```tsx\nplay: async ({ canvasElement }) => {\n  const canvas = within(canvasElement);\n  await waitFor(() => {\n    expect(canvas.getByRole('button')).toBeInTheDocument();\n  });\n}\n```\n\n### Portal Component Handling\nFor components using Radix UI portals (Tooltip, Dialog, Dropdown), play functions only verify the trigger element since portal content renders outside `canvasElement`.\n\n## Test Results\n\n| Metric | Result |\n|--------|--------|\n| Test Files | 213 passed, 3 skipped |\n| Tests | 2,888 passed |\n| TypeScript | 0 errors |\n\n## Files Changed\n\n- **249 files modified**\n- **+5,807 lines added**\n- **-193 lines removed**\n\n---\n\n*This PR was written using [Vibe Kanban](https://vibekanban.com)*",
+    "state": "OPEN",
+    "author": "yigitkonur",
+    "createdAt": "2026-02-03T05:23:01Z",
+    "updatedAt": "2026-02-03T08:13:36Z",
+    "mergedAt": null,
+    "baseRef": "main",
+    "headRef": "vk/bd5b-design-system-st",
+    "additions": 5807,
+    "deletions": 193,
+    "changedFiles": 249,
+    "isDraft": false,
+    "reviewDecision": null,
+    "mergeState": "CLEAN",
+    "labels": [],
+    "assignees": []
+  },
+  "files": [
+    {
+      "path": "BATCH_A_COMPLETION_REPORT.md",
+      "additions": 301,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/CommandDisplay.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [
+        {
+          "id": "PRRC_kwDOQ5kffM6kWJJ1",
+          "agent": "devin",
+          "author": "devin-ai-integration",
+          "body": "🔴 **Play function fallback uses getByText(/./), which is likely to throw due to multiple matches**\n\nSeveral stories attempt a “fallback” assertion using `canvas.getByText(/./)` when a selector doesn’t match. `getByText(/./)` will typically match **many** text nodes and throws a “Found multiple elements” error.\n\nEven if the left side of the `||` returns `null`, the fallback is very likely to throw, making these `play` functions flaky or consistently failing depending on DOM structure.\n\n<details>\n<summary>Click to expand</summary>\n\nExample from `CommandDisplay`:\n```ts\nexpect(\n  canvasElement.querySelector('pre, code, [data-slot]') || canvas.getByText(/./)\n).toBeInTheDocument();\n```\n\nThis can fail in two ways:\n- selector returns `null` and `getByText(/./)` throws (multiple matches)\n- selector is too broad (`[data-slot]`) and may match unrelated elements, reducing assertion quality\n\n</details>\n\n**Recommendation:** Use a specific assertion (e.g., `getByText('npm install retroui')` or `querySelector('pre')`) and if fallbacks are needed, use `queryBy*` APIs and/or more specific regex that matches a unique string.\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "rawBody": "<!-- devin-review-comment {\"id\": \"BUG_pr-review-job-0a356a06c9a64c48bcbf1399d939a807_0003\", \"file_path\": \"components/retroui/CommandDisplay.stories.tsx\", \"start_line\": 52, \"end_line\": 56, \"side\": \"RIGHT\"} -->\n\n🔴 **Play function fallback uses getByText(/./), which is likely to throw due to multiple matches**\n\nSeveral stories attempt a “fallback” assertion using `canvas.getByText(/./)` when a selector doesn’t match. `getByText(/./)` will typically match **many** text nodes and throws a “Found multiple elements” error.\n\nEven if the left side of the `||` returns `null`, the fallback is very likely to throw, making these `play` functions flaky or consistently failing depending on DOM structure.\n\n<details>\n<summary>Click to expand</summary>\n\nExample from `CommandDisplay`:\n```ts\nexpect(\n  canvasElement.querySelector('pre, code, [data-slot]') || canvas.getByText(/./)\n).toBeInTheDocument();\n```\n\nThis can fail in two ways:\n- selector returns `null` and `getByText(/./)` throws (multiple matches)\n- selector is too broad (`[data-slot]`) and may match unrelated elements, reducing assertion quality\n\n</details>\n\n**Recommendation:** Use a specific assertion (e.g., `getByText('npm install retroui')` or `querySelector('pre')`) and if fallbacks are needed, use `queryBy*` APIs and/or more specific regex that matches a unique string.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/yigitkonur/design-system-retro-ui/pull/1\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-open-in-devin-review-dark.svg?v=1\">\n    <img src=\"https://static.devin.ai/assets/gh-open-in-devin-review-light.svg?v=1\" alt=\"Open in Devin Review\">\n  </picture>\n</a>\n<!-- devin-review-badge-end -->\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "createdAt": "2026-02-03T05:28:45Z",
+          "type": "inline",
+          "file": "components/retroui/CommandDisplay.stories.tsx",
+          "line": 52,
+          "endLine": 56,
+          "diffHunk": "@@ -48,6 +49,12 @@ export const Default: Story = {\n   args: {\n     command: 'npm install retroui',\n   },\n+  play: async ({ canvasElement }) => {\n+    const canvas = within(canvasElement);\n+    await waitFor(() => {\n+      expect(canvasElement.querySelector('pre, code, [data-slot]') || canvas.getByText(/./)).toBeInTheDocument();\n+    });",
+          "isResolved": false,
+          "issue": "Play function fallback uses getByText(/./), which is likely to throw due to multiple matches"
+        }
+      ],
+      "commentCount": 1
+    },
+    {
+      "path": "components/retroui/charts/AreaChart.stories.tsx",
+      "additions": 60,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/charts/BarChart.stories.tsx",
+      "additions": 60,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/charts/LineChart.stories.tsx",
+      "additions": 66,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/charts/PieChart.stories.tsx",
+      "additions": 56,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/controls/IconButton.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/controls/ToggleGroup.stories.tsx",
+      "additions": 24,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/display/Avatar.stories.tsx",
+      "additions": 15,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/display/Badge.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/display/BasicCard.stories.tsx",
+      "additions": 40,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/display/Calendar.stories.tsx",
+      "additions": 30,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/display/Card.stories.tsx",
+      "additions": 13,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/display/Carousel.stories.tsx",
+      "additions": 16,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/display/Table.stories.tsx",
+      "additions": 14,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/feedback/Alert.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/feedback/Loader.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/feedback/Progress.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/feedback/Sonner.stories.tsx",
+      "additions": 36,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/icons/Icon.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/icons/icons-catalog.stories.tsx",
+      "additions": 45,
+      "deletions": 21,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/inputs/Label.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/inputs/Textarea.stories.tsx",
+      "additions": 8,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/navigation/Accordion.stories.tsx",
+      "additions": 30,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/navigation/Breadcrumb.stories.tsx",
+      "additions": 22,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/navigation/Tab.stories.tsx",
+      "additions": 29,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/overlays/Command.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/overlays/ContextMenu.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/overlays/Dialog.stories.tsx",
+      "additions": 16,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/overlays/Menu.stories.tsx",
+      "additions": 16,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/overlays/Popover.stories.tsx",
+      "additions": 16,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/overlays/Tooltip.stories.tsx",
+      "additions": 27,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/patterns/Login.stories.tsx",
+      "additions": 56,
+      "deletions": 2,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/patterns/ProductCard.stories.tsx",
+      "additions": 10,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/primitives/AspectRatio.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/primitives/Box.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/primitives/Center.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/primitives/Container.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/primitives/Divider.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/primitives/Flex.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/primitives/Grid.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/primitives/Spacer.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/primitives/Stack.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/primitives/VisuallyHidden.stories.tsx",
+      "additions": 18,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/typography/Blockquote.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [
+        {
+          "id": "PRRC_kwDOQ5kffM6kWJJg",
+          "agent": "devin",
+          "author": "devin-ai-integration",
+          "body": "🔴 **Play function uses invalid ARIA role \"blockquote\" and fallback never executes because getByRole throws**\n\nThe `Blockquote` story’s `play` function calls `canvas.getByRole('blockquote')`, but **\"blockquote\" is not a valid ARIA role**. This throws immediately, so the `|| canvas.getByText(/./)` fallback is dead code.\n\n**Actual:** play() throws, failing the story’s interaction test.\n**Expected:** query for the `<blockquote>` element via selector or accessible text, and use `queryBy*` if you need fallbacks.\n\n<details>\n<summary>Click to expand</summary>\n\nProblematic code:\n```ts\nexpect(canvas.getByRole('blockquote') || canvas.getByText(/./)).toBeInTheDocument();\n```\n\n</details>\n\n**Recommendation:** Use `canvasElement.querySelector('blockquote')` or `canvas.getByText(<specific quote text>)` and avoid `getByText(/./)` which is likely to match multiple elements.\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "rawBody": "<!-- devin-review-comment {\"id\": \"BUG_pr-review-job-0a356a06c9a64c48bcbf1399d939a807_0002\", \"file_path\": \"components/retroui/typography/Blockquote.stories.tsx\", \"start_line\": 78, \"end_line\": 82, \"side\": \"RIGHT\"} -->\n\n🔴 **Play function uses invalid ARIA role \"blockquote\" and fallback never executes because getByRole throws**\n\nThe `Blockquote` story’s `play` function calls `canvas.getByRole('blockquote')`, but **\"blockquote\" is not a valid ARIA role**. This throws immediately, so the `|| canvas.getByText(/./)` fallback is dead code.\n\n**Actual:** play() throws, failing the story’s interaction test.\n**Expected:** query for the `<blockquote>` element via selector or accessible text, and use `queryBy*` if you need fallbacks.\n\n<details>\n<summary>Click to expand</summary>\n\nProblematic code:\n```ts\nexpect(canvas.getByRole('blockquote') || canvas.getByText(/./)).toBeInTheDocument();\n```\n\n</details>\n\n**Recommendation:** Use `canvasElement.querySelector('blockquote')` or `canvas.getByText(<specific quote text>)` and avoid `getByText(/./)` which is likely to match multiple elements.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/yigitkonur/design-system-retro-ui/pull/1\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-open-in-devin-review-dark.svg?v=1\">\n    <img src=\"https://static.devin.ai/assets/gh-open-in-devin-review-light.svg?v=1\" alt=\"Open in Devin Review\">\n  </picture>\n</a>\n<!-- devin-review-badge-end -->\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "createdAt": "2026-02-03T05:28:44Z",
+          "type": "inline",
+          "file": "components/retroui/typography/Blockquote.stories.tsx",
+          "line": 78,
+          "endLine": 82,
+          "diffHunk": "@@ -74,6 +75,12 @@ export const Default: Story = {\n   args: {\n     children: 'Design is not just what it looks like and feels like. Design is how it works.',\n   },\n+  play: async ({ canvasElement }) => {\n+    const canvas = within(canvasElement);\n+    await waitFor(() => {\n+      expect(canvas.getByRole('blockquote') || canvas.getByText(/./)).toBeInTheDocument();\n+    });",
+          "isResolved": false,
+          "issue": "Play function uses invalid ARIA role \"blockquote\" and fallback never executes because getByRole throws"
+        }
+      ],
+      "commentCount": 1
+    },
+    {
+      "path": "components/retroui/typography/Code.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [
+        {
+          "id": "PRRC_kwDOQ5kffM6kWJJL",
+          "agent": "devin",
+          "author": "devin-ai-integration",
+          "body": "🔴 **Play function uses invalid ARIA role \"code\" and fallback never executes because getByRole throws**\n\nThe `Code` story’s `play` function calls `canvas.getByRole('code')`, but **\"code\" is not a valid ARIA role**. Testing Library will throw immediately, so the `|| canvas.getByText(/./)` fallback is never reached.\n\n**Actual:** play() throws on `getByRole('code')`, causing Storybook interaction tests to fail.\n**Expected:** use a valid query (e.g., `canvasElement.querySelector('code')` or `canvas.getByText(...)`) and avoid throwing queries when attempting fallbacks.\n\n<details>\n<summary>Click to expand</summary>\n\nProblematic code:\n```ts\nexpect(canvas.getByRole('code') || canvas.getByText(/./)).toBeInTheDocument();\n```\n\nBecause `getByRole` throws on failure, `||` does not work as a fallback.\n\n</details>\n\n**Recommendation:** Replace with non-throwing queries or valid selectors, e.g. `expect(canvasElement.querySelector('code')).toBeInTheDocument()` or `const el = canvas.queryByText(...); expect(el).toBeInTheDocument();`.\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "rawBody": "<!-- devin-review-comment {\"id\": \"BUG_pr-review-job-0a356a06c9a64c48bcbf1399d939a807_0001\", \"file_path\": \"components/retroui/typography/Code.stories.tsx\", \"start_line\": 66, \"end_line\": 70, \"side\": \"RIGHT\"} -->\n\n🔴 **Play function uses invalid ARIA role \"code\" and fallback never executes because getByRole throws**\n\nThe `Code` story’s `play` function calls `canvas.getByRole('code')`, but **\"code\" is not a valid ARIA role**. Testing Library will throw immediately, so the `|| canvas.getByText(/./)` fallback is never reached.\n\n**Actual:** play() throws on `getByRole('code')`, causing Storybook interaction tests to fail.\n**Expected:** use a valid query (e.g., `canvasElement.querySelector('code')` or `canvas.getByText(...)`) and avoid throwing queries when attempting fallbacks.\n\n<details>\n<summary>Click to expand</summary>\n\nProblematic code:\n```ts\nexpect(canvas.getByRole('code') || canvas.getByText(/./)).toBeInTheDocument();\n```\n\nBecause `getByRole` throws on failure, `||` does not work as a fallback.\n\n</details>\n\n**Recommendation:** Replace with non-throwing queries or valid selectors, e.g. `expect(canvasElement.querySelector('code')).toBeInTheDocument()` or `const el = canvas.queryByText(...); expect(el).toBeInTheDocument();`.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/yigitkonur/design-system-retro-ui/pull/1\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-open-in-devin-review-dark.svg?v=1\">\n    <img src=\"https://static.devin.ai/assets/gh-open-in-devin-review-light.svg?v=1\" alt=\"Open in Devin Review\">\n  </picture>\n</a>\n<!-- devin-review-badge-end -->\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "createdAt": "2026-02-03T05:28:43Z",
+          "type": "inline",
+          "file": "components/retroui/typography/Code.stories.tsx",
+          "line": 66,
+          "endLine": 70,
+          "diffHunk": "@@ -62,6 +63,12 @@ export const Default: Story = {\n   args: {\n     children: 'npm install retroui',\n   },\n+  play: async ({ canvasElement }) => {\n+    const canvas = within(canvasElement);\n+    await waitFor(() => {\n+      expect(canvas.getByRole('code') || canvas.getByText(/./)).toBeInTheDocument();\n+    });",
+          "isResolved": false,
+          "issue": "Play function uses invalid ARIA role \"code\" and fallback never executes because getByRole throws"
+        }
+      ],
+      "commentCount": 1
+    },
+    {
+      "path": "components/retroui/typography/Heading.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/typography/Kbd.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/typography/Link.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/typography/List.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/typography/Paragraph.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "components/retroui/typography/Text.stories.tsx",
+      "additions": 6,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/account-deletion.stories.tsx",
+      "additions": 1,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/avatar-upload.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/connected-devices.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/edit-profile-form.stories.tsx",
+      "additions": 1,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/invoice-history.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/language-region.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/login-history.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/notification-preferences.stories.tsx",
+      "additions": 1,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/password-change-form.stories.tsx",
+      "additions": 1,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/payment-methods.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/plan-upgrade.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/quota-breakdown.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/theme-appearance.stories.tsx",
+      "additions": 1,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/account-settings/usage-meter.stories.tsx",
+      "additions": 7,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/admin-activity-log.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/admin-settings.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/audit-log-table.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/bulk-user-actions.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/content-approve-reject.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/error-reporting-dashboard.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/feature-flags-toggle.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/flagged-content-queue.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/impersonate-user.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/invite-user-modal.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/role-permission-matrix.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/system-status-page.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/user-ban-warn-dialog.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/user-management-table.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/admin/user-suspension-deactivation.stories.tsx",
+      "additions": 5,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/authentication/password-reset-form.stories.tsx",
+      "additions": 1,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/authentication/profile-settings.stories.tsx",
+      "additions": 8,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/authentication/sign-in-form.stories.tsx",
+      "additions": 1,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/authentication/sign-up-form.stories.tsx",
+      "additions": 1,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/authentication/two-factor-auth.stories.tsx",
+      "additions": 1,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/communication/contact-list.stories.tsx",
+      "additions": 7,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/communication/inbox-list.stories.tsx",
+      "additions": 7,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/communication/presence-indicator.stories.tsx",
+      "additions": 6,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/dashboard/activity-feed.stories.tsx",
+      "additions": 32,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/dashboard/analytics-dashboard.stories.tsx",
+      "additions": 28,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/dashboard/analytics-view.stories.tsx",
+      "additions": 31,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/dashboard/data-rich-tables.stories.tsx",
+      "additions": 40,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/dashboard/data-table.stories.tsx",
+      "additions": 15,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/dashboard/kpi-overview.stories.tsx",
+      "additions": 15,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/dashboard/metrics-grid.stories.tsx",
+      "additions": 15,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/dashboard/revenue-chart.stories.tsx",
+      "additions": 14,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/dashboard/stats-card.stories.tsx",
+      "additions": 14,
+      "deletions": 1,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/ecommerce/checkout-flow.stories.tsx",
+      "additions": 16,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    },
+    {
+      "path": "foundation/ecommerce/order-tracking.stories.tsx",
+      "additions": 29,
+      "deletions": 0,
+      "comments": [],
+      "commentCount": 0
+    }
+  ],
+  "comments": {
+    "general": [
+      {
+        "id": "IC_kwDOQ5kffM7k3hqK",
+        "agent": "generic",
+        "author": "yigitkonur",
+        "body": "@coderabbitai full review",
+        "rawBody": "@coderabbitai full review",
+        "createdAt": "2026-02-03T08:13:07Z",
+        "type": "comment"
+      },
+      {
+        "id": "IC_kwDOQ5kffM7k3h1a",
+        "agent": "coderabbit",
+        "author": "coderabbitai",
+        "body": "<details>\n<summary>✅ Actions performed</summary>\n\nFull review triggered.\n\n</details>",
+        "rawBody": "<!-- This is an auto-generated reply by CodeRabbit -->\n<details>\n<summary>✅ Actions performed</summary>\n\nFull review triggered.\n\n</details>",
+        "createdAt": "2026-02-03T08:13:17Z",
+        "type": "comment"
+      },
+      {
+        "id": "IC_kwDOQ5kffM7k3iJx",
+        "agent": "greptile",
+        "author": "greptile-apps",
+        "body": "<h2>Greptile Overview</h2>\n\n<h3>Greptile Summary</h3>\n\nThis PR adds comprehensive `argTypes` controls and `play()` test functions to 249 Storybook story files across the RetroUI design system, enhancing interactive documentation and automated testing capabilities.\n\n## What Changed\n\n- **249 story files enhanced** with argTypes and play functions\n- **+5,807 lines added** across components, foundation, and cross-cutting stories\n- **Storybook version bumped** from 10.1.10 to 10.1.11\n- **Test coverage** increased with 2,888 passing tests\n\n## Implementation Pattern\n\nAll files follow a consistent pattern:\n- Import from `'storybook/test'` for play function utilities\n- argTypes define prop controls with descriptions and default values\n- Play functions verify component rendering using `within`, `expect`, `waitFor`\n- Portal components (Dialog, Tooltip, Popover) only verify trigger elements\n\n## Impact\n\nThis change is purely additive - it enhances developer experience with interactive controls and automated testing without modifying any production component code or breaking existing functionality.\n\n<h3>Confidence Score: 5/5</h3>\n\n- This PR is safe to merge with no identified risks\n- All changes are additive Storybook enhancements that don't affect production code. The PR adds documentation and testing capabilities with 2,888 passing tests and 0 TypeScript errors. No runtime bugs, security issues, or breaking changes identified.\n- No files require special attention\n\n<details><summary><h3>Important Files Changed</h3></summary>\n\n| Filename | Overview |\n|----------|----------|\n| components/retroui/charts/AreaChart.stories.tsx | Added comprehensive argTypes with 10+ controls and play function for chart verification |\n| foundation/onboarding/welcome-splash.stories.tsx | Added 10 argTypes controls and play function for button verification |\n| foundation/files/file-browser.stories.tsx | Added 15 argTypes with comprehensive controls and multiple play functions for interaction testing |\n| foundation/ecommerce/shopping-cart.stories.tsx | Added 10 argTypes for cart properties and play function for rendering verification |\n| package.json | Minor version bump for storybook from 10.1.10 to 10.1.11 |\n| BATCH_A_COMPLETION_REPORT.md | Documentation file tracking completion status of 35 story files |\n\n</details>\n\n</details>\n\n<h3>Sequence Diagram</h3>\n\n```mermaid\nsequenceDiagram\n    participant Dev as Developer\n    participant SB as Storybook UI\n    participant Story as Story File\n    participant Test as Play Function\n    participant Comp as Component\n    \n    Dev->>SB: Opens Storybook\n    SB->>Story: Load story metadata\n    Story->>SB: Return Meta with argTypes\n    SB->>SB: Generate Controls panel from argTypes\n    \n    Dev->>SB: Adjust control value\n    SB->>Story: Pass new args to story\n    Story->>Comp: Render component with args\n    Comp->>SB: Display component\n    \n    Note over Test: Automated Testing Flow\n    SB->>Test: Execute play() function\n    Test->>Comp: Query DOM (within, expect)\n    Test->>Test: waitFor element existence\n    Test->>SB: Report test results (pass/fail)\n    \n    Note over Story,Test: 249 files now support:<br/>- Interactive controls<br/>- Automated testing<br/>- Auto-generated docs\n```",
+        "rawBody": "<h2>Greptile Overview</h2>\n\n<h3>Greptile Summary</h3>\n\nThis PR adds comprehensive `argTypes` controls and `play()` test functions to 249 Storybook story files across the RetroUI design system, enhancing interactive documentation and automated testing capabilities.\n\n## What Changed\n\n- **249 story files enhanced** with argTypes and play functions\n- **+5,807 lines added** across components, foundation, and cross-cutting stories\n- **Storybook version bumped** from 10.1.10 to 10.1.11\n- **Test coverage** increased with 2,888 passing tests\n\n## Implementation Pattern\n\nAll files follow a consistent pattern:\n- Import from `'storybook/test'` for play function utilities\n- argTypes define prop controls with descriptions and default values\n- Play functions verify component rendering using `within`, `expect`, `waitFor`\n- Portal components (Dialog, Tooltip, Popover) only verify trigger elements\n\n## Impact\n\nThis change is purely additive - it enhances developer experience with interactive controls and automated testing without modifying any production component code or breaking existing functionality.\n\n<h3>Confidence Score: 5/5</h3>\n\n- This PR is safe to merge with no identified risks\n- All changes are additive Storybook enhancements that don't affect production code. The PR adds documentation and testing capabilities with 2,888 passing tests and 0 TypeScript errors. No runtime bugs, security issues, or breaking changes identified.\n- No files require special attention\n\n<details><summary><h3>Important Files Changed</h3></summary>\n\n\n\n\n| Filename | Overview |\n|----------|----------|\n| components/retroui/charts/AreaChart.stories.tsx | Added comprehensive argTypes with 10+ controls and play function for chart verification |\n| foundation/onboarding/welcome-splash.stories.tsx | Added 10 argTypes controls and play function for button verification |\n| foundation/files/file-browser.stories.tsx | Added 15 argTypes with comprehensive controls and multiple play functions for interaction testing |\n| foundation/ecommerce/shopping-cart.stories.tsx | Added 10 argTypes for cart properties and play function for rendering verification |\n| package.json | Minor version bump for storybook from 10.1.10 to 10.1.11 |\n| BATCH_A_COMPLETION_REPORT.md | Documentation file tracking completion status of 35 story files |\n\n</details>\n\n\n</details>\n\n\n<h3>Sequence Diagram</h3>\n\n```mermaid\nsequenceDiagram\n    participant Dev as Developer\n    participant SB as Storybook UI\n    participant Story as Story File\n    participant Test as Play Function\n    participant Comp as Component\n    \n    Dev->>SB: Opens Storybook\n    SB->>Story: Load story metadata\n    Story->>SB: Return Meta with argTypes\n    SB->>SB: Generate Controls panel from argTypes\n    \n    Dev->>SB: Adjust control value\n    SB->>Story: Pass new args to story\n    Story->>Comp: Render component with args\n    Comp->>SB: Display component\n    \n    Note over Test: Automated Testing Flow\n    SB->>Test: Execute play() function\n    Test->>Comp: Query DOM (within, expect)\n    Test->>Test: waitFor element existence\n    Test->>SB: Report test results (pass/fail)\n    \n    Note over Story,Test: 249 files now support:<br/>- Interactive controls<br/>- Automated testing<br/>- Auto-generated docs\n```",
+        "createdAt": "2026-02-03T08:13:36Z",
+        "type": "comment"
+      },
+      {
+        "id": "PRR_kwDOQ5kffM7fGi47",
+        "agent": "devin",
+        "author": "devin-ai-integration",
+        "body": "**Devin Review** found 3 potential issues.\n\nView issues and 5 additional flags in Devin Review.",
+        "rawBody": "**Devin Review** found 3 potential issues.\n\nView issues and 5 additional flags in Devin Review.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/yigitkonur/design-system-retro-ui/pull/1\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-open-in-devin-review-dark.svg?v=1\">\n    <img src=\"https://static.devin.ai/assets/gh-open-in-devin-review-light.svg?v=1\" alt=\"Open in Devin Review\">\n  </picture>\n</a>\n<!-- devin-review-badge-end -->",
+        "createdAt": "2026-02-03T05:28:45Z",
+        "type": "review",
+        "issue": "Found 3 potential issue(s)"
+      },
+      {
+        "id": "PRR_kwDOQ5kffM7fHEes",
+        "agent": "copilot",
+        "author": "copilot-pull-request-reviewer",
+        "body": "Copilot encountered an error and was unable to review this pull request. You can try again by re-requesting a review.",
+        "rawBody": "Copilot encountered an error and was unable to review this pull request. You can try again by re-requesting a review.",
+        "createdAt": "2026-02-03T06:07:57Z",
+        "type": "review"
+      }
+    ],
+    "byFile": {
+      "components/retroui/typography/Code.stories.tsx": [
+        {
+          "id": "PRRC_kwDOQ5kffM6kWJJL",
+          "agent": "devin",
+          "author": "devin-ai-integration",
+          "body": "🔴 **Play function uses invalid ARIA role \"code\" and fallback never executes because getByRole throws**\n\nThe `Code` story’s `play` function calls `canvas.getByRole('code')`, but **\"code\" is not a valid ARIA role**. Testing Library will throw immediately, so the `|| canvas.getByText(/./)` fallback is never reached.\n\n**Actual:** play() throws on `getByRole('code')`, causing Storybook interaction tests to fail.\n**Expected:** use a valid query (e.g., `canvasElement.querySelector('code')` or `canvas.getByText(...)`) and avoid throwing queries when attempting fallbacks.\n\n<details>\n<summary>Click to expand</summary>\n\nProblematic code:\n```ts\nexpect(canvas.getByRole('code') || canvas.getByText(/./)).toBeInTheDocument();\n```\n\nBecause `getByRole` throws on failure, `||` does not work as a fallback.\n\n</details>\n\n**Recommendation:** Replace with non-throwing queries or valid selectors, e.g. `expect(canvasElement.querySelector('code')).toBeInTheDocument()` or `const el = canvas.queryByText(...); expect(el).toBeInTheDocument();`.\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "rawBody": "<!-- devin-review-comment {\"id\": \"BUG_pr-review-job-0a356a06c9a64c48bcbf1399d939a807_0001\", \"file_path\": \"components/retroui/typography/Code.stories.tsx\", \"start_line\": 66, \"end_line\": 70, \"side\": \"RIGHT\"} -->\n\n🔴 **Play function uses invalid ARIA role \"code\" and fallback never executes because getByRole throws**\n\nThe `Code` story’s `play` function calls `canvas.getByRole('code')`, but **\"code\" is not a valid ARIA role**. Testing Library will throw immediately, so the `|| canvas.getByText(/./)` fallback is never reached.\n\n**Actual:** play() throws on `getByRole('code')`, causing Storybook interaction tests to fail.\n**Expected:** use a valid query (e.g., `canvasElement.querySelector('code')` or `canvas.getByText(...)`) and avoid throwing queries when attempting fallbacks.\n\n<details>\n<summary>Click to expand</summary>\n\nProblematic code:\n```ts\nexpect(canvas.getByRole('code') || canvas.getByText(/./)).toBeInTheDocument();\n```\n\nBecause `getByRole` throws on failure, `||` does not work as a fallback.\n\n</details>\n\n**Recommendation:** Replace with non-throwing queries or valid selectors, e.g. `expect(canvasElement.querySelector('code')).toBeInTheDocument()` or `const el = canvas.queryByText(...); expect(el).toBeInTheDocument();`.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/yigitkonur/design-system-retro-ui/pull/1\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-open-in-devin-review-dark.svg?v=1\">\n    <img src=\"https://static.devin.ai/assets/gh-open-in-devin-review-light.svg?v=1\" alt=\"Open in Devin Review\">\n  </picture>\n</a>\n<!-- devin-review-badge-end -->\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "createdAt": "2026-02-03T05:28:43Z",
+          "type": "inline",
+          "file": "components/retroui/typography/Code.stories.tsx",
+          "line": 66,
+          "endLine": 70,
+          "diffHunk": "@@ -62,6 +63,12 @@ export const Default: Story = {\n   args: {\n     children: 'npm install retroui',\n   },\n+  play: async ({ canvasElement }) => {\n+    const canvas = within(canvasElement);\n+    await waitFor(() => {\n+      expect(canvas.getByRole('code') || canvas.getByText(/./)).toBeInTheDocument();\n+    });",
+          "isResolved": false,
+          "issue": "Play function uses invalid ARIA role \"code\" and fallback never executes because getByRole throws"
+        }
+      ],
+      "components/retroui/typography/Blockquote.stories.tsx": [
+        {
+          "id": "PRRC_kwDOQ5kffM6kWJJg",
+          "agent": "devin",
+          "author": "devin-ai-integration",
+          "body": "🔴 **Play function uses invalid ARIA role \"blockquote\" and fallback never executes because getByRole throws**\n\nThe `Blockquote` story’s `play` function calls `canvas.getByRole('blockquote')`, but **\"blockquote\" is not a valid ARIA role**. This throws immediately, so the `|| canvas.getByText(/./)` fallback is dead code.\n\n**Actual:** play() throws, failing the story’s interaction test.\n**Expected:** query for the `<blockquote>` element via selector or accessible text, and use `queryBy*` if you need fallbacks.\n\n<details>\n<summary>Click to expand</summary>\n\nProblematic code:\n```ts\nexpect(canvas.getByRole('blockquote') || canvas.getByText(/./)).toBeInTheDocument();\n```\n\n</details>\n\n**Recommendation:** Use `canvasElement.querySelector('blockquote')` or `canvas.getByText(<specific quote text>)` and avoid `getByText(/./)` which is likely to match multiple elements.\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "rawBody": "<!-- devin-review-comment {\"id\": \"BUG_pr-review-job-0a356a06c9a64c48bcbf1399d939a807_0002\", \"file_path\": \"components/retroui/typography/Blockquote.stories.tsx\", \"start_line\": 78, \"end_line\": 82, \"side\": \"RIGHT\"} -->\n\n🔴 **Play function uses invalid ARIA role \"blockquote\" and fallback never executes because getByRole throws**\n\nThe `Blockquote` story’s `play` function calls `canvas.getByRole('blockquote')`, but **\"blockquote\" is not a valid ARIA role**. This throws immediately, so the `|| canvas.getByText(/./)` fallback is dead code.\n\n**Actual:** play() throws, failing the story’s interaction test.\n**Expected:** query for the `<blockquote>` element via selector or accessible text, and use `queryBy*` if you need fallbacks.\n\n<details>\n<summary>Click to expand</summary>\n\nProblematic code:\n```ts\nexpect(canvas.getByRole('blockquote') || canvas.getByText(/./)).toBeInTheDocument();\n```\n\n</details>\n\n**Recommendation:** Use `canvasElement.querySelector('blockquote')` or `canvas.getByText(<specific quote text>)` and avoid `getByText(/./)` which is likely to match multiple elements.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/yigitkonur/design-system-retro-ui/pull/1\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-open-in-devin-review-dark.svg?v=1\">\n    <img src=\"https://static.devin.ai/assets/gh-open-in-devin-review-light.svg?v=1\" alt=\"Open in Devin Review\">\n  </picture>\n</a>\n<!-- devin-review-badge-end -->\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "createdAt": "2026-02-03T05:28:44Z",
+          "type": "inline",
+          "file": "components/retroui/typography/Blockquote.stories.tsx",
+          "line": 78,
+          "endLine": 82,
+          "diffHunk": "@@ -74,6 +75,12 @@ export const Default: Story = {\n   args: {\n     children: 'Design is not just what it looks like and feels like. Design is how it works.',\n   },\n+  play: async ({ canvasElement }) => {\n+    const canvas = within(canvasElement);\n+    await waitFor(() => {\n+      expect(canvas.getByRole('blockquote') || canvas.getByText(/./)).toBeInTheDocument();\n+    });",
+          "isResolved": false,
+          "issue": "Play function uses invalid ARIA role \"blockquote\" and fallback never executes because getByRole throws"
+        }
+      ],
+      "components/retroui/CommandDisplay.stories.tsx": [
+        {
+          "id": "PRRC_kwDOQ5kffM6kWJJ1",
+          "agent": "devin",
+          "author": "devin-ai-integration",
+          "body": "🔴 **Play function fallback uses getByText(/./), which is likely to throw due to multiple matches**\n\nSeveral stories attempt a “fallback” assertion using `canvas.getByText(/./)` when a selector doesn’t match. `getByText(/./)` will typically match **many** text nodes and throws a “Found multiple elements” error.\n\nEven if the left side of the `||` returns `null`, the fallback is very likely to throw, making these `play` functions flaky or consistently failing depending on DOM structure.\n\n<details>\n<summary>Click to expand</summary>\n\nExample from `CommandDisplay`:\n```ts\nexpect(\n  canvasElement.querySelector('pre, code, [data-slot]') || canvas.getByText(/./)\n).toBeInTheDocument();\n```\n\nThis can fail in two ways:\n- selector returns `null` and `getByText(/./)` throws (multiple matches)\n- selector is too broad (`[data-slot]`) and may match unrelated elements, reducing assertion quality\n\n</details>\n\n**Recommendation:** Use a specific assertion (e.g., `getByText('npm install retroui')` or `querySelector('pre')`) and if fallbacks are needed, use `queryBy*` APIs and/or more specific regex that matches a unique string.\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "rawBody": "<!-- devin-review-comment {\"id\": \"BUG_pr-review-job-0a356a06c9a64c48bcbf1399d939a807_0003\", \"file_path\": \"components/retroui/CommandDisplay.stories.tsx\", \"start_line\": 52, \"end_line\": 56, \"side\": \"RIGHT\"} -->\n\n🔴 **Play function fallback uses getByText(/./), which is likely to throw due to multiple matches**\n\nSeveral stories attempt a “fallback” assertion using `canvas.getByText(/./)` when a selector doesn’t match. `getByText(/./)` will typically match **many** text nodes and throws a “Found multiple elements” error.\n\nEven if the left side of the `||` returns `null`, the fallback is very likely to throw, making these `play` functions flaky or consistently failing depending on DOM structure.\n\n<details>\n<summary>Click to expand</summary>\n\nExample from `CommandDisplay`:\n```ts\nexpect(\n  canvasElement.querySelector('pre, code, [data-slot]') || canvas.getByText(/./)\n).toBeInTheDocument();\n```\n\nThis can fail in two ways:\n- selector returns `null` and `getByText(/./)` throws (multiple matches)\n- selector is too broad (`[data-slot]`) and may match unrelated elements, reducing assertion quality\n\n</details>\n\n**Recommendation:** Use a specific assertion (e.g., `getByText('npm install retroui')` or `querySelector('pre')`) and if fallbacks are needed, use `queryBy*` APIs and/or more specific regex that matches a unique string.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/yigitkonur/design-system-retro-ui/pull/1\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-open-in-devin-review-dark.svg?v=1\">\n    <img src=\"https://static.devin.ai/assets/gh-open-in-devin-review-light.svg?v=1\" alt=\"Open in Devin Review\">\n  </picture>\n</a>\n<!-- devin-review-badge-end -->\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "createdAt": "2026-02-03T05:28:45Z",
+          "type": "inline",
+          "file": "components/retroui/CommandDisplay.stories.tsx",
+          "line": 52,
+          "endLine": 56,
+          "diffHunk": "@@ -48,6 +49,12 @@ export const Default: Story = {\n   args: {\n     command: 'npm install retroui',\n   },\n+  play: async ({ canvasElement }) => {\n+    const canvas = within(canvasElement);\n+    await waitFor(() => {\n+      expect(canvasElement.querySelector('pre, code, [data-slot]') || canvas.getByText(/./)).toBeInTheDocument();\n+    });",
+          "isResolved": false,
+          "issue": "Play function fallback uses getByText(/./), which is likely to throw due to multiple matches"
+        }
+      ]
+    }
+  },
+  "reviews": {
+    "summary": [
+      {
+        "author": "devin-ai-integration",
+        "state": "COMMENTED",
+        "submittedAt": "2026-02-03T05:28:45Z",
+        "body": "**Devin Review** found 3 potential issues.\n\nView issues and 5 additional flags in Devin Review.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/yigitkonur/design-system-retro-ui/pull/1\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-open-in-devin-review-dark.svg?v=1\">\n    <img src=\"https://static.devin.ai/assets/gh-open-in-devin-review-light.svg?v=1\" alt=\"Open in Devin Review\">\n  </picture>\n</a>\n<!-- devin-review-badge-end -->",
+        "commentCount": 3
+      },
+      {
+        "author": "copilot-pull-request-reviewer",
+        "state": "COMMENTED",
+        "submittedAt": "2026-02-03T06:07:57Z",
+        "body": "Copilot encountered an error and was unable to review this pull request. You can try again by re-requesting a review.",
+        "commentCount": 0
+      }
+    ],
+    "byAuthor": {
+      "devin-ai-integration": [
+        {
+          "id": "PRR_kwDOQ5kffM7fGi47",
+          "agent": "devin",
+          "author": "devin-ai-integration",
+          "body": "**Devin Review** found 3 potential issues.\n\nView issues and 5 additional flags in Devin Review.",
+          "rawBody": "**Devin Review** found 3 potential issues.\n\nView issues and 5 additional flags in Devin Review.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/yigitkonur/design-system-retro-ui/pull/1\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-open-in-devin-review-dark.svg?v=1\">\n    <img src=\"https://static.devin.ai/assets/gh-open-in-devin-review-light.svg?v=1\" alt=\"Open in Devin Review\">\n  </picture>\n</a>\n<!-- devin-review-badge-end -->",
+          "createdAt": "2026-02-03T05:28:45Z",
+          "type": "review",
+          "issue": "Found 3 potential issue(s)"
+        },
+        {
+          "id": "PRRC_kwDOQ5kffM6kWJJL",
+          "agent": "devin",
+          "author": "devin-ai-integration",
+          "body": "🔴 **Play function uses invalid ARIA role \"code\" and fallback never executes because getByRole throws**\n\nThe `Code` story’s `play` function calls `canvas.getByRole('code')`, but **\"code\" is not a valid ARIA role**. Testing Library will throw immediately, so the `|| canvas.getByText(/./)` fallback is never reached.\n\n**Actual:** play() throws on `getByRole('code')`, causing Storybook interaction tests to fail.\n**Expected:** use a valid query (e.g., `canvasElement.querySelector('code')` or `canvas.getByText(...)`) and avoid throwing queries when attempting fallbacks.\n\n<details>\n<summary>Click to expand</summary>\n\nProblematic code:\n```ts\nexpect(canvas.getByRole('code') || canvas.getByText(/./)).toBeInTheDocument();\n```\n\nBecause `getByRole` throws on failure, `||` does not work as a fallback.\n\n</details>\n\n**Recommendation:** Replace with non-throwing queries or valid selectors, e.g. `expect(canvasElement.querySelector('code')).toBeInTheDocument()` or `const el = canvas.queryByText(...); expect(el).toBeInTheDocument();`.\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "rawBody": "<!-- devin-review-comment {\"id\": \"BUG_pr-review-job-0a356a06c9a64c48bcbf1399d939a807_0001\", \"file_path\": \"components/retroui/typography/Code.stories.tsx\", \"start_line\": 66, \"end_line\": 70, \"side\": \"RIGHT\"} -->\n\n🔴 **Play function uses invalid ARIA role \"code\" and fallback never executes because getByRole throws**\n\nThe `Code` story’s `play` function calls `canvas.getByRole('code')`, but **\"code\" is not a valid ARIA role**. Testing Library will throw immediately, so the `|| canvas.getByText(/./)` fallback is never reached.\n\n**Actual:** play() throws on `getByRole('code')`, causing Storybook interaction tests to fail.\n**Expected:** use a valid query (e.g., `canvasElement.querySelector('code')` or `canvas.getByText(...)`) and avoid throwing queries when attempting fallbacks.\n\n<details>\n<summary>Click to expand</summary>\n\nProblematic code:\n```ts\nexpect(canvas.getByRole('code') || canvas.getByText(/./)).toBeInTheDocument();\n```\n\nBecause `getByRole` throws on failure, `||` does not work as a fallback.\n\n</details>\n\n**Recommendation:** Replace with non-throwing queries or valid selectors, e.g. `expect(canvasElement.querySelector('code')).toBeInTheDocument()` or `const el = canvas.queryByText(...); expect(el).toBeInTheDocument();`.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/yigitkonur/design-system-retro-ui/pull/1\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-open-in-devin-review-dark.svg?v=1\">\n    <img src=\"https://static.devin.ai/assets/gh-open-in-devin-review-light.svg?v=1\" alt=\"Open in Devin Review\">\n  </picture>\n</a>\n<!-- devin-review-badge-end -->\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "createdAt": "2026-02-03T05:28:43Z",
+          "type": "inline",
+          "file": "components/retroui/typography/Code.stories.tsx",
+          "line": 66,
+          "endLine": 70,
+          "diffHunk": "@@ -62,6 +63,12 @@ export const Default: Story = {\n   args: {\n     children: 'npm install retroui',\n   },\n+  play: async ({ canvasElement }) => {\n+    const canvas = within(canvasElement);\n+    await waitFor(() => {\n+      expect(canvas.getByRole('code') || canvas.getByText(/./)).toBeInTheDocument();\n+    });",
+          "isResolved": false,
+          "issue": "Play function uses invalid ARIA role \"code\" and fallback never executes because getByRole throws"
+        },
+        {
+          "id": "PRRC_kwDOQ5kffM6kWJJg",
+          "agent": "devin",
+          "author": "devin-ai-integration",
+          "body": "🔴 **Play function uses invalid ARIA role \"blockquote\" and fallback never executes because getByRole throws**\n\nThe `Blockquote` story’s `play` function calls `canvas.getByRole('blockquote')`, but **\"blockquote\" is not a valid ARIA role**. This throws immediately, so the `|| canvas.getByText(/./)` fallback is dead code.\n\n**Actual:** play() throws, failing the story’s interaction test.\n**Expected:** query for the `<blockquote>` element via selector or accessible text, and use `queryBy*` if you need fallbacks.\n\n<details>\n<summary>Click to expand</summary>\n\nProblematic code:\n```ts\nexpect(canvas.getByRole('blockquote') || canvas.getByText(/./)).toBeInTheDocument();\n```\n\n</details>\n\n**Recommendation:** Use `canvasElement.querySelector('blockquote')` or `canvas.getByText(<specific quote text>)` and avoid `getByText(/./)` which is likely to match multiple elements.\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "rawBody": "<!-- devin-review-comment {\"id\": \"BUG_pr-review-job-0a356a06c9a64c48bcbf1399d939a807_0002\", \"file_path\": \"components/retroui/typography/Blockquote.stories.tsx\", \"start_line\": 78, \"end_line\": 82, \"side\": \"RIGHT\"} -->\n\n🔴 **Play function uses invalid ARIA role \"blockquote\" and fallback never executes because getByRole throws**\n\nThe `Blockquote` story’s `play` function calls `canvas.getByRole('blockquote')`, but **\"blockquote\" is not a valid ARIA role**. This throws immediately, so the `|| canvas.getByText(/./)` fallback is dead code.\n\n**Actual:** play() throws, failing the story’s interaction test.\n**Expected:** query for the `<blockquote>` element via selector or accessible text, and use `queryBy*` if you need fallbacks.\n\n<details>\n<summary>Click to expand</summary>\n\nProblematic code:\n```ts\nexpect(canvas.getByRole('blockquote') || canvas.getByText(/./)).toBeInTheDocument();\n```\n\n</details>\n\n**Recommendation:** Use `canvasElement.querySelector('blockquote')` or `canvas.getByText(<specific quote text>)` and avoid `getByText(/./)` which is likely to match multiple elements.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/yigitkonur/design-system-retro-ui/pull/1\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-open-in-devin-review-dark.svg?v=1\">\n    <img src=\"https://static.devin.ai/assets/gh-open-in-devin-review-light.svg?v=1\" alt=\"Open in Devin Review\">\n  </picture>\n</a>\n<!-- devin-review-badge-end -->\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "createdAt": "2026-02-03T05:28:44Z",
+          "type": "inline",
+          "file": "components/retroui/typography/Blockquote.stories.tsx",
+          "line": 78,
+          "endLine": 82,
+          "diffHunk": "@@ -74,6 +75,12 @@ export const Default: Story = {\n   args: {\n     children: 'Design is not just what it looks like and feels like. Design is how it works.',\n   },\n+  play: async ({ canvasElement }) => {\n+    const canvas = within(canvasElement);\n+    await waitFor(() => {\n+      expect(canvas.getByRole('blockquote') || canvas.getByText(/./)).toBeInTheDocument();\n+    });",
+          "isResolved": false,
+          "issue": "Play function uses invalid ARIA role \"blockquote\" and fallback never executes because getByRole throws"
+        },
+        {
+          "id": "PRRC_kwDOQ5kffM6kWJJ1",
+          "agent": "devin",
+          "author": "devin-ai-integration",
+          "body": "🔴 **Play function fallback uses getByText(/./), which is likely to throw due to multiple matches**\n\nSeveral stories attempt a “fallback” assertion using `canvas.getByText(/./)` when a selector doesn’t match. `getByText(/./)` will typically match **many** text nodes and throws a “Found multiple elements” error.\n\nEven if the left side of the `||` returns `null`, the fallback is very likely to throw, making these `play` functions flaky or consistently failing depending on DOM structure.\n\n<details>\n<summary>Click to expand</summary>\n\nExample from `CommandDisplay`:\n```ts\nexpect(\n  canvasElement.querySelector('pre, code, [data-slot]') || canvas.getByText(/./)\n).toBeInTheDocument();\n```\n\nThis can fail in two ways:\n- selector returns `null` and `getByText(/./)` throws (multiple matches)\n- selector is too broad (`[data-slot]`) and may match unrelated elements, reducing assertion quality\n\n</details>\n\n**Recommendation:** Use a specific assertion (e.g., `getByText('npm install retroui')` or `querySelector('pre')`) and if fallbacks are needed, use `queryBy*` APIs and/or more specific regex that matches a unique string.\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "rawBody": "<!-- devin-review-comment {\"id\": \"BUG_pr-review-job-0a356a06c9a64c48bcbf1399d939a807_0003\", \"file_path\": \"components/retroui/CommandDisplay.stories.tsx\", \"start_line\": 52, \"end_line\": 56, \"side\": \"RIGHT\"} -->\n\n🔴 **Play function fallback uses getByText(/./), which is likely to throw due to multiple matches**\n\nSeveral stories attempt a “fallback” assertion using `canvas.getByText(/./)` when a selector doesn’t match. `getByText(/./)` will typically match **many** text nodes and throws a “Found multiple elements” error.\n\nEven if the left side of the `||` returns `null`, the fallback is very likely to throw, making these `play` functions flaky or consistently failing depending on DOM structure.\n\n<details>\n<summary>Click to expand</summary>\n\nExample from `CommandDisplay`:\n```ts\nexpect(\n  canvasElement.querySelector('pre, code, [data-slot]') || canvas.getByText(/./)\n).toBeInTheDocument();\n```\n\nThis can fail in two ways:\n- selector returns `null` and `getByText(/./)` throws (multiple matches)\n- selector is too broad (`[data-slot]`) and may match unrelated elements, reducing assertion quality\n\n</details>\n\n**Recommendation:** Use a specific assertion (e.g., `getByText('npm install retroui')` or `querySelector('pre')`) and if fallbacks are needed, use `queryBy*` APIs and/or more specific regex that matches a unique string.\n\n<!-- devin-review-badge-begin -->\n<a href=\"https://app.devin.ai/review/yigitkonur/design-system-retro-ui/pull/1\">\n  <picture>\n    <source media=\"(prefers-color-scheme: dark)\" srcset=\"https://static.devin.ai/assets/gh-open-in-devin-review-dark.svg?v=1\">\n    <img src=\"https://static.devin.ai/assets/gh-open-in-devin-review-light.svg?v=1\" alt=\"Open in Devin Review\">\n  </picture>\n</a>\n<!-- devin-review-badge-end -->\n\n---\n*Was this helpful? React with 👍 or 👎 to provide feedback.*",
+          "createdAt": "2026-02-03T05:28:45Z",
+          "type": "inline",
+          "file": "components/retroui/CommandDisplay.stories.tsx",
+          "line": 52,
+          "endLine": 56,
+          "diffHunk": "@@ -48,6 +49,12 @@ export const Default: Story = {\n   args: {\n     command: 'npm install retroui',\n   },\n+  play: async ({ canvasElement }) => {\n+    const canvas = within(canvasElement);\n+    await waitFor(() => {\n+      expect(canvasElement.querySelector('pre, code, [data-slot]') || canvas.getByText(/./)).toBeInTheDocument();\n+    });",
+          "isResolved": false,
+          "issue": "Play function fallback uses getByText(/./), which is likely to throw due to multiple matches"
+        }
+      ],
+      "copilot-pull-request-reviewer": [
+        {
+          "id": "PRR_kwDOQ5kffM7fHEes",
+          "agent": "copilot",
+          "author": "copilot-pull-request-reviewer",
+          "body": "Copilot encountered an error and was unable to review this pull request. You can try again by re-requesting a review.",
+          "rawBody": "Copilot encountered an error and was unable to review this pull request. You can try again by re-requesting a review.",
+          "createdAt": "2026-02-03T06:07:57Z",
+          "type": "review"
+        }
+      ]
+    }
+  }
+}

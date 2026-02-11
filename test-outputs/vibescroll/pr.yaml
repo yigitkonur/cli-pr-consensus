@@ -1,0 +1,212 @@
+pr:
+  number: 1
+  title: "Initial Repository Setup: Vibe Scroll Marketing Website"
+  author: yigitkonur
+  state: OPEN
+  review_status: APPROVED
+  stats: +1127 -20243 (67 files)
+files_by_folder:
+  scripts:
+    files:
+      - name: add-content-translations.ts
+        changes: +0 -220
+      - name: add-media-keys-i18n.mjs
+        changes: +0 -2129
+      - name: add-missing-i18n.mjs
+        changes: +0 -367
+      - name: add-missing-ko-translations.ts
+        changes: +0 -49
+      - name: analyze-top30.js
+        changes: +0 -37
+      - name: filter-country-languages.js
+        changes: +0 -58
+      - name: fix-all-i18n-issues.ts
+        changes: +0 -157
+      - name: fix-content-i18n.ts
+        changes: +0 -512
+      - name: media-session-tone-base64.txt
+        changes: +0 -1
+      - name: media-session-tone.mp3
+        changes: +0 -0
+      - name: optimize-images.ts
+        changes: +1 -1
+      - name: translate-all-locales.ts
+        changes: +0 -471
+      - name: translate-content-comprehensive.ts
+        changes: +0 -319
+      - name: translate-full-content.ts
+        changes: +0 -848
+      - name: translate-hindi-comprehensive.ts
+        changes: +0 -241
+      - name: translate-hindi.ts
+        changes: +0 -246
+      - name: translate-remaining.ts
+        changes: +0 -659
+      - name: translate-thai-batch.ts
+        changes: +0 -290
+    total_changes: 6606
+  .:
+    files:
+      - name: .gitignore
+        changes: +11 -13
+        comments:
+          - by: coderabbitai
+            body: "_⚠️ Potential issue_ | _🔴 Critical_ <details> <summary>🧩 Analysis chain</summary> 🏁 Script executed: ```shell
+              #!/bin/bash # Verify messages/ is purely generated and all locales have source files..."
+            line: 57
+          - by: coderabbitai
+            body: _⚠️ Potential issue_ | _🟠 Major_ **Overly broad ignore patterns will silently drop legitimate files.** **What
+              breaks?** 1. Any `docs/` directory anywhere in the repo is ignored (not just root-leve...
+            line: 63
+            suggestion: "# Audit/Report artifacts (don't commit these) -*-report.md -*-audit.md -*-summary.md -docs/ -refa..."
+      - name: ACCESSIBILITY_FIXES_APPLIED.md
+        changes: +0 -321
+      - name: CLAUDE.md
+        changes: +117 -129
+      - name: DESIGN_AUDIT.md
+        changes: +0 -169
+      - name: I18N_DEEP_AUDIT_REPORT.md
+        changes: +0 -233
+      - name: I18N_MIGRATION_COMPLETE.md
+        changes: +0 -181
+      - name: PERFORMANCE_OPTIMIZATION_SUMMARY.md
+        changes: +0 -287
+      - name: PR_DESCRIPTION.md
+        changes: +915 -0
+      - name: README.md
+        changes: +78 -20
+        comments:
+          - by: copilot-pull-request-reviewer
+            body: The PR title describes this as "Initial Repository Setup" but the changes show this is actually a cleanup of an
+              existing, fully-built repository with extensive functionality. The PR removes documen...
+            line: 1
+      - name: VISUAL_OPTIMIZATION_GUIDE.md
+        changes: +0 -390
+      - name: dutch-translation-summary.md
+        changes: +0 -84
+      - name: feature-content-patch.txt
+        changes: +0 -102
+      - name: get-missing-translations.ts
+        changes: +0 -40
+      - name: i18n-enforcer-report.md
+        changes: +0 -474
+      - name: interactive-mockup-report.md
+        changes: +0 -560
+      - name: native-perf-insert.txt
+        changes: +0 -96
+      - name: performance-report.md
+        changes: +0 -581
+      - name: proxy.ts
+        changes: +0 -36
+      - name: retroui-a11y-report.md
+        changes: +0 -696
+      - name: spanish-translation-summary.md
+        changes: +0 -108
+      - name: translate-ja-untranslated.ts
+        changes: +0 -87
+    total_changes: 5728
+  scripts/archive:
+    files:
+      - name: add-bulgarian-translations.js
+        changes: +0 -167
+      - name: add-portuguese-translations.js
+        changes: +0 -156
+      - name: apply-german-translations.js
+        changes: +0 -99
+      - name: bulgarian-final-translations.js
+        changes: +0 -149
+      - name: bulgarian-translations-comprehensive.js
+        changes: +0 -217
+      - name: complete-german-translation.js
+        changes: +0 -301
+      - name: complete-hungarian-translation.js
+        changes: +0 -299
+      - name: content-translations-generated.json
+        changes: +0 -2186
+      - name: full-german-translations.js
+        changes: +0 -35
+      - name: german-translations-data.json
+        changes: +0 -142
+    total_changes: 3751
+  docs:
+    files:
+      - name: FINAL_PERFORMANCE_SUMMARY.md
+        changes: +0 -330
+      - name: I18N_STATUS.md
+        changes: +0 -166
+      - name: PERFORMANCE_OPTIMIZATIONS_IMPLEMENTED.md
+        changes: +0 -410
+      - name: RADIX_UI_TREE_SHAKING_AUDIT.md
+        changes: +0 -196
+      - name: VIDEO_LAZY_LOADING_IMPLEMENTATION.md
+        changes: +0 -228
+      - name: VIDEO_OPTIMIZATION_GUIDE.md
+        changes: +0 -202
+      - name: i18n-audit-report.md
+        changes: +0 -228
+    total_changes: 1760
+  refactor-plan/architecture:
+    files:
+      - name: 03-server-client-component-boundary.md
+        changes: +0 -342
+      - name: 06-routing-architecture.md
+        changes: +0 -342
+      - name: 08-code-organization.md
+        changes: +0 -441
+    total_changes: 1125
+  refactor-plan/performance:
+    files:
+      - name: 07-performance-optimization.md
+        changes: +0 -760
+    total_changes: 760
+  refactor-plan/components:
+    files:
+      - name: 01-file-size-component-splitting.md
+        changes: +0 -271
+      - name: 05-icon-system-centralization.md
+        changes: +0 -315
+    total_changes: 586
+  refactor-plan/state-management:
+    files:
+      - name: 04-state-management-refactor.md
+        changes: +0 -525
+    total_changes: 525
+  refactor-plan/content:
+    files:
+      - name: 02-content-data-separation.md
+        changes: +0 -354
+    total_changes: 354
+  refactor-plan:
+    files:
+      - name: README.md
+        changes: +0 -164
+    total_changes: 164
+  components/lib:
+    files:
+      - name: LazyMount.tsx
+        changes: +4 -5
+    total_changes: 9
+  app/[locale]/(marketing)/platforms/[platform]/[feature]:
+    files:
+      - name: page.tsx
+        changes: +1 -1
+        comments:
+          - by: copilot-pull-request-reviewer
+            body: The unused error variable in the catch block has been correctly removed. This is a good practice to avoid ESLint
+              warnings for unused variables. However, consider logging errors for debugging purpos...
+            line: 57
+            suggestion: "} catch (error) { // Log translation metadata errors in non-production for debugging, but fall ba..."
+    total_changes: 2
+reviews:
+  - reviewer: copilot-pull-request-reviewer
+    decision: COMMENTED
+    comments: 2
+  - reviewer: coderabbitai
+    decision: COMMENTED
+    comments: 2
+  - reviewer: devin-ai-integration
+    decision: COMMENTED
+    comments: 0
+  - reviewer: bito-code-review
+    decision: APPROVED
+    comments: 0
