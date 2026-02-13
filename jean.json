@@ -1,0 +1,6 @@
+{
+  "name": "cli-prconsensus",
+  "port": 2900,
+  "setup": "[[ -f \"$JEAN_ROOT_PATH/.env\" ]] && cp \"$JEAN_ROOT_PATH/.env\" . ; mkdir -p .claude && [[ -f \"$JEAN_ROOT_PATH/.claude/settings.local.json\" ]] && cp \"$JEAN_ROOT_PATH/.claude/settings.local.json\" .claude/settings.local.json ; npm ci && npm run build",
+  "run": "npx tsc --watch"
+}
