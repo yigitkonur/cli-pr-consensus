@@ -43,20 +43,20 @@ else
 fi
 
 # --------------------------------------------------------------------------- #
-# 3. Install dependencies (npm ci for reproducible installs from lockfile)
+# 3. Install dependencies (pnpm install for reproducible installs from lockfile)
 # --------------------------------------------------------------------------- #
 echo ""
-echo "==> Installing npm dependencies ..."
+echo "==> Installing pnpm dependencies ..."
 cd "${WORKTREE_DIR}"
-npm ci
-echo "[ok] npm ci completed"
+pnpm install --frozen-lockfile
+echo "[ok] pnpm install completed"
 
 # --------------------------------------------------------------------------- #
 # 4. Build the project
 # --------------------------------------------------------------------------- #
 echo ""
 echo "==> Building TypeScript project ..."
-npm run build
+pnpm build
 echo "[ok] Build completed"
 
 echo ""
