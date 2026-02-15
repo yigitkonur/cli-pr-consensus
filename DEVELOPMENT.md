@@ -299,10 +299,10 @@ export const DEFAULT_NOISE_PATTERNS: RegExp[] = [
 2. Run the CLI and check the output:
 
 ```bash
-npm run dev -- https://github.com/owner/repo/pull/123 --format json -v
+pnpm dev -- https://github.com/owner/repo/pull/123 --format json -v
 
 # Check specific fields in output:
-npm run dev -- <url> --format json | jq '.comments.byFile | to_entries[] | .value[] | select(.agent == "reviewbot")'
+pnpm dev -- <url> --format json | jq '.comments.byFile | to_entries[] | .value[] | select(.agent == "reviewbot")'
 ```
 
 3. Verify:
@@ -443,7 +443,7 @@ The collector merges GraphQL and REST data. If you see duplicates:
 - [ ] Tested with real PR containing agent comments
 - [ ] All 4 output formats show correct data (json, yaml, md, consensus)
 - [ ] Edge cases handled (empty body, malformed input)
-- [ ] No TypeScript errors (`npm run build`)
+- [ ] No TypeScript errors (`pnpm build`)
 
 ---
 

@@ -42,7 +42,7 @@ people think AI code review is just for catching obvious bugs. it's not. it's ab
 npx cli-prconsensus <github-pr-url>
 
 # or install globally
-npm install -g cli-prconsensus
+pnpm add -g cli-prconsensus
 
 # then use either command
 pr-consensus <url>
