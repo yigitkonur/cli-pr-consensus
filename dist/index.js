@@ -11,7 +11,7 @@ import { formatAsJSON } from './formatters/json.js';
 import { formatAsYAML } from './formatters/yaml.js';
 import { formatAsMarkdown } from './formatters/markdown.js';
 import { formatAsConsensus } from './formatters/consensus.js';
-const VERSION = '1.0.0';
+const VERSION = '1.0.3';
 const program = new Command();
 program
     .name('pr-consensus')

@@ -41,7 +41,6 @@ export function loadFilterConfig(filterFilePath?: string): FilterConfig {
 function findFilterFile(): string | null {
   const possiblePaths = [
     '.pr-consensus-ignore',
-    '.pr-consensusignore',
     join(process.env.HOME || '', '.pr-consensus-ignore'),
   ];
 
