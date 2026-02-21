@@ -1,246 +1,172 @@
-# cli-prconsensus
-
-> get consensus from all your AI code reviewers in one place
+fetches every AI code review comment from a GitHub PR — Copilot, CodeRabbit, Bito, Devin, Greptile — normalizes them out of their proprietary HTML/markdown/JSON formats, filters noise, and renders one unified document you can feed straight into an LLM prompt.
 
 ```bash
 npx cli-prconsensus https://github.com/owner/repo/pull/123
 ```
 
----
-
-## the problem
-
-so here's the thing. i use multiple AI code review tools on my PRs - Copilot, Bito, Devin, CodeRabbit, you name it. each one catches different stuff. one might spot a security issue another misses. one is better at suggesting cleaner abstractions. they complement each other.
-
-but then i realized something annoying. when i want to actually *use* all this feedback - maybe paste it into Claude Code or another LLM to help me fix things - i'm manually copy-pasting comments one by one. and the data is all over the place.
-
-here's the real problem though: **scattered context is terrible for LLMs**.
-
-let's say Copilot comments on line 27 of `Button.tsx`, and Bito comments on line 45 of the same file, but they're comment #2 and comment #47 in the thread. when you feed this to an LLM, the attention mechanism has to work way harder to connect related information. if you understand how transformers work, you know that keeping related context close together makes a huge difference.
-
-that's why i built this. it collects all PR feedback and reorganizes it by file and line number. all comments about `Button.tsx` are together. all feedback about lines 40-50 is grouped. the LLM can actually *see* the full picture.
-
-## why this matters
-
-this isn't just about catching bugs before production (though it does that).
-
-i run two different AI review subscriptions. before any code hits production, multiple perspectives have looked at it. but it's not just "find security holes" - these tools can enforce:
-
-- are we using existing abstractions correctly?
-- does this follow our clean code standards?
-- is there unnecessary complexity?
-- are we being consistent with the rest of the codebase?
-
-people think AI code review is just for catching obvious bugs. it's not. it's about maintaining quality at scale. but you need to actually *use* the feedback efficiently, and that's where the tooling was broken.
-
----
-
-## install
-
-```bash
-# just run it (no install needed)
-npx cli-prconsensus <github-pr-url>
-
-# or install globally
-pnpm add -g cli-prconsensus
-
-# then use either command
-pr-consensus <url>
-prc <url>  # short alias
-```
-
-**requires**: [GitHub CLI](https://cli.github.com/) authenticated (`gh auth login`)
-
----
-
-## usage
-
-```bash
-# basic - get all comments as JSON
-prc https://github.com/facebook/react/pull/28000
-
-# consensus mode - grouped by file, optimized for LLMs
-prc <url> --format consensus
-
-# get the diffs too
-prc <url> --full
-
-# different formats
-prc <url> --format json       # structured data
-prc <url> --format yaml       # readable, grouped by folder
-prc <url> --format md         # markdown
-prc <url> --format consensus  # the good stuff
-
-# save to file
-prc <url> --format consensus -o review.md
-
-# pipe to clipboard (macOS)
-prc <url> --format consensus | pbcopy
-```
-
-### quick copy-paste examples
-
-```bash
-# get consensus view, copy to clipboard, paste into Claude
-npx cli-prconsensus https://github.com/owner/repo/pull/123 --format consensus | pbcopy
-
-# save full review with diffs for later
-npx cli-prconsensus https://github.com/owner/repo/pull/123 --full -o pr-review.json
-
-# quiet mode for scripting
-npx cli-prconsensus <url> -q --format json > data.json
-```
+[![npm](https://img.shields.io/npm/v/cli-prconsensus.svg?style=flat-square)](https://www.npmjs.com/package/cli-prconsensus)
+[![node](https://img.shields.io/badge/node-18+-93450a.svg?style=flat-square)](https://nodejs.org/)
+[![license](https://img.shields.io/badge/license-MIT-grey.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
 ---
 
 ## what it does
 
-### collects everything
+- **agent-aware parsing** — each AI reviewer (Copilot, CodeRabbit, Bito, Devin, Greptile) has a dedicated parser that strips proprietary markup, extracts structured fields (`issue`, `fix`, `suggestion`, `citations`), and normalizes to clean markdown
+- **noise filtering** — auto-detects and removes bot status messages, empty bodies, dependabot/renovate/github-actions chatter. customizable via `.pr-consensus-ignore`
+- **four output formats** — JSON, YAML, markdown, and `consensus` (LLM-optimized: groups comments by folder, clusters by line range, includes truncated diff hunks)
+- **three data modes** — comments only (default), code only (`--code`), or everything (`--full`)
+- **line-range clustering** — inline comments within 5 lines of each other get grouped together with a shared diff hunk context
+- **comment enrichment** — cross-references GraphQL and REST data to get the richest line/hunk metadata per comment
+- **custom templates** — `--template` flag supports Go-style template syntax for markdown output
 
-- PR metadata (title, author, status, labels)
-- all comments (top-level and inline)
-- all review threads with replies
-- review decisions (approved, changes requested)
-- file diffs (optional)
+## prerequisites
 
-### detects AI agents
+[GitHub CLI](https://cli.github.com/) (`gh`) must be installed and authenticated. the tool shells out to `gh` for all GitHub API calls — no token env vars needed.
 
-automatically identifies and normalizes output from:
-
-| agent | what we extract |
-|-------|-----------------|
-| Copilot | code suggestions, review summaries |
-| Bito | issue/fix pairs, severity, citations |
-| Devin | metadata, dashboard links |
-| CodeRabbit | actionable items, summaries |
-| Greptile | analysis, recommendations |
-
-### filters noise
-
-removes the annoying stuff:
-- "Bito is crafting review details..."
-- empty bodies
-- status updates that aren't actual feedback
-
-### reorganizes for LLMs
-
-the consensus format groups everything by file:
-
-```markdown
-## src/components/Button.tsx (4 comments)
-
-### lines 42-48
-[diff snippet]
-
-**@copilot**: consider memoizing this callback
-
-**@bito**: same issue - this will cause unnecessary re-renders
-> suggestion: wrap in useCallback
-
-### line 89
-[diff snippet]
-
-**@devin**: missing error boundary for async operation
+```bash
+gh auth login
 ```
 
-all feedback about the same code is together. the LLM doesn't have to hunt through a 50-comment thread to find related information.
+## install
 
----
-
-## options
-
-| flag | what it does |
-|------|--------------|
-| `--format <type>` | output format: `json`, `yaml`, `md`, `consensus` |
-| `--code` | diffs only, no comments |
-| `--full` | everything - comments + diffs |
-| `-o, --output <file>` | write to file |
-| `--no-filter` | keep noise comments |
-| `-v, --verbose` | show progress |
-| `-q, --quiet` | suppress status messages |
-
----
-
-## example output
-
-### consensus format
-
-```markdown
-# PR #142: feat: add user authentication
-
-> status: CHANGES_REQUESTED | author: @yigitkonur | files: 12 | comments: 23
-
-## summary
-
-**@copilot** (COMMENTED): overall solid implementation, but auth token
-handling needs attention...
-
-**@bito** (CHANGES_REQUESTED): found 3 security issues...
-
----
-
-## file reviews
-
-### src/auth/login.ts (5 comments)
-
-#### lines 23-31
-
-```diff
-+ const token = generateToken(user);
-+ localStorage.setItem('auth', token);
+```bash
+npm install -g cli-prconsensus
 ```
 
-**@copilot** [copilot]:
-> storing tokens in localStorage is vulnerable to XSS. consider httpOnly cookies.
+or run without installing:
 
-**@bito** [bito]:
-> **issue**: XSS vulnerability
-> **fix**: use secure cookie storage with httpOnly flag
-
-**@devin** [devin]:
-> same concern flagged. see OWASP guidelines for token storage.
-
----
-
-### src/auth/middleware.ts (2 comments)
-
-#### line 67
-
-**@coderabbit** [coderabbit]:
-> missing rate limiting on auth endpoints. consider adding express-rate-limit.
+```bash
+npx cli-prconsensus <PR_URL>
 ```
 
-three different tools, same concern, all in one place. now you can actually address it properly.
+or from source:
 
----
+```bash
+git clone https://github.com/yigitkonur/cli-prconsensus.git
+cd cli-prconsensus
+pnpm install --frozen-lockfile && pnpm build
+node dist/index.js <PR_URL>
+```
 
-## workflow
+## usage
 
-here's how i use this:
+```bash
+# default: fetch comments, output JSON
+prc https://github.com/owner/repo/pull/123
 
-1. open PR, let all the AI reviewers do their thing
-2. run `prc <url> --format consensus | pbcopy`
-3. paste into Claude Code: "here's the feedback on my PR, help me address these issues"
-4. Claude can see everything organized by file, makes targeted fixes
-5. push, repeat if needed
+# shorthand works too
+prc owner/repo/123
 
-the key insight: **multiple AI reviewers catch more issues than one, but only if you can actually process their combined feedback efficiently**.
+# LLM-optimized consensus format
+prc owner/repo/123 -f consensus
 
----
+# full mode: comments + diffs + file patches
+prc owner/repo/123 --full -f yaml
 
-## development
+# code only: files and diffs, skip comments
+prc owner/repo/123 --code
 
-want to add support for a new AI review tool? see [DEVELOPMENT.md](./DEVELOPMENT.md) for:
-- architecture overview
-- how to add new agent parsers
-- parser design guidelines
+# write to file
+prc owner/repo/123 -f md -o review.md
 
----
+# custom markdown template
+prc owner/repo/123 -f md --template my-template.md
+
+# disable noise filtering
+prc owner/repo/123 --no-filter
+
+# verbose progress info to stderr
+prc owner/repo/123 -v
+```
+
+## CLI flags
+
+```
+USAGE:
+    prc <url> [options]
+
+ARGUMENTS:
+    url                         PR URL or shorthand owner/repo/number
+
+OPTIONS:
+    -f, --format <type>         output format: json (default), yaml, md, consensus
+    -t, --template <file>       custom Go-style template for md format
+    -o, --output <file>         write to file instead of stdout
+        --code                  code-only mode: files + diffs, no comments
+        --full                  full mode: comments + diffs + file patches
+        --include-diff          include full unified diff in normal mode
+        --no-filter             disable noise filtering
+        --filter-file <file>    custom filter patterns file
+    -v, --verbose               print progress summary to stderr
+    -q, --quiet                 suppress all non-data output
+```
+
+## output formats
+
+| format | what you get |
+|:---|:---|
+| `json` | full `PRConsensusOutput` object, pretty-printed |
+| `yaml` | restructured: files grouped by folder, sorted by total change count |
+| `md` | markdown with tables, sections, inline comments. supports `--template` |
+| `consensus` | LLM-optimized: comments clustered by file and line range, diff hunks (max 15 lines), agent badges, review decisions |
+
+## supported agents
+
+| agent | detection | parsed fields |
+|:---|:---|:---|
+| Copilot | `copilot`, `copilot-*` | `suggestion` blocks |
+| CodeRabbit | `coderabbitai`, `coderabbit*` | `issue` (callout type), `suggestion`; auto-flags noise |
+| Bito | `bito`, `bito-*` | `issue`/`fix` (HTML divs), `suggestion`, `citations` |
+| Devin | `devin`, `devin-*` | `file`, `line`, `endLine`, `issue` (from JSON in HTML comments) |
+| Greptile | `greptile*` | generic parser (clean markdown) |
+
+unknown agents get a generic parser that normalizes whitespace and extracts `suggestion` blocks.
+
+## noise filtering
+
+built-in patterns filter ~25 common noise patterns (bot status updates, empty bodies, acknowledgements). you can extend with a `.pr-consensus-ignore` file in your cwd or home directory:
+
+```
+# exclude specific authors
+@dependabot
+@renovate
+
+# regex patterns
+/automated merge/i
+
+# plain text (becomes case-insensitive regex)
+review skipped
+```
+
+## project structure
+
+```
+src/
+  index.ts              — CLI entry point (commander.js)
+  collector.ts          — orchestrator: fetches, parses, filters, builds output
+  types/index.ts        — all TypeScript interfaces
+  rest/
+    diff.ts             — all gh CLI subprocess calls (execSync)
+  graphql/
+    queries.ts          — GraphQL query strings
+  parsers/
+    index.ts            — agent detection + routing
+    copilot.ts          — Copilot comment parser
+    coderabbit.ts       — CodeRabbit comment parser
+    bito.ts             — Bito comment parser
+    devin.ts            — Devin comment parser
+    generic.ts          — fallback parser
+  filters/
+    defaults.ts         — built-in noise patterns + excluded authors
+    noise.ts            — filter config loader + noise detection
+  formatters/
+    json.ts             — JSON + NDJSON output
+    yaml.ts             — YAML output (folder-grouped)
+    markdown.ts         — markdown + Go-style template engine
+    consensus.ts        — LLM-optimized consensus output
+```
 
 ## license
 
 MIT
-
----
-
-*built because copy-pasting 47 comments from 5 different bots is not a workflow*
