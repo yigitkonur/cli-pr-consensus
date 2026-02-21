@@ -1,10 +1,10 @@
 fetches every AI code review comment from a GitHub PR — Copilot, CodeRabbit, Bito, Devin, Greptile — normalizes them out of their proprietary HTML/markdown/JSON formats, filters noise, and renders one unified document you can feed straight into an LLM prompt.
 
 ```bash
-npx cli-prconsensus https://github.com/owner/repo/pull/123
+npx cli-pr-consensus https://github.com/owner/repo/pull/123
 ```
 
-[![npm](https://img.shields.io/npm/v/cli-prconsensus.svg?style=flat-square)](https://www.npmjs.com/package/cli-prconsensus)
+[![npm](https://img.shields.io/npm/v/cli-pr-consensus.svg?style=flat-square)](https://www.npmjs.com/package/cli-pr-consensus)
 [![node](https://img.shields.io/badge/node-18+-93450a.svg?style=flat-square)](https://nodejs.org/)
 [![license](https://img.shields.io/badge/license-MIT-grey.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
@@ -31,20 +31,20 @@ gh auth login
 ## install
 
 ```bash
-npm install -g cli-prconsensus
+npm install -g cli-pr-consensus
 ```
 
 or run without installing:
 
 ```bash
-npx cli-prconsensus <PR_URL>
+npx cli-pr-consensus <PR_URL>
 ```
 
 or from source:
 
 ```bash
-git clone https://github.com/yigitkonur/cli-prconsensus.git
-cd cli-prconsensus
+git clone https://github.com/yigitkonur/cli-pr-consensus.git
+cd cli-pr-consensus
 pnpm install --frozen-lockfile && pnpm build
 node dist/index.js <PR_URL>
 ```
