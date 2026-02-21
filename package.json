@@ -1,5 +1,5 @@
 {
-  "name": "cli-prconsensus",
+  "name": "cli-pr-consensus",
   "version": "1.0.3",
   "description": "collect consensus from multiple AI code review tools into one LLM-optimized output",
   "type": "module",

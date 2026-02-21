@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ###############################################################################
-# worktree-init.sh - Initialize a git worktree for cli-prconsensus
+# worktree-init.sh - Initialize a git worktree for cli-pr-consensus
 #
 # Run this script from inside a freshly created git worktree to:
 #   1. Copy .env (if it exists in the main repo)
@@ -13,7 +13,7 @@ set -euo pipefail
 # This script is idempotent -- safe to run multiple times.
 ###############################################################################
 
-MAIN_REPO="/Users/yigitkonur/dev/projects/my-cli/cli-prconsensus"
+MAIN_REPO="/Users/yigitkonur/dev/projects/my-cli/cli-pr-consensus"
 WORKTREE_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "==> worktree-init.sh"
